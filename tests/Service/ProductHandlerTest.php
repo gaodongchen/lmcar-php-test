@@ -57,12 +57,61 @@ class ProductHandlerTest extends TestCase
 
     public function testGetTotalPrice()
     {
+        $service = new ProductHandler();
         $totalPrice = 0;
         foreach ($this->products as $product) {
             $price = $product['price'] ?: 0;
             $totalPrice += $price;
         }
 
-        $this->assertEquals(143, $totalPrice);
+        $this->assertEquals($service->getTotalPrice($this->products), $totalPrice);
+    }
+
+    public function filterTypeAndPriceSort()
+    {
+        $result = [];
+        $lastestPrice = NULL;
+        $service = new ProductHandler();
+        $products = $service->filterByType($this->products, 'dessert');
+        $products = $service->sortByPrice($products);
+        foreach ($products as $product) {
+            $result[] = [$product['type'], $product['price'], $lastestPrice];
+            $lastestPrice = $product['price'];
+        }
+        return $result;
+    }
+
+    public function createAtToTimestamp()
+    {
+        $result = [];
+        $service = new ProductHandler();
+        $products = $service->createAtToTimestamp($this->products);
+        foreach ($this->products as $key => $product) {
+            $result[] = [$products[$key]['create_at'], $product['create_at']];
+        }
+        return $result;
+    }
+
+    /**
+     * 测试类型过滤和排序方法
+     *
+     * @dataProvider filterTypeAndPriceSort
+     */
+    public function testFilterTypeAndPriceSort($type, $price, $lastestPrice)
+    {
+        if($lastestPrice !== NULL) {
+            $this->assertEquals($lastestPrice >= $price, true);
+        }
+        $this->assertEquals(strtolower($type), 'dessert');
+    }
+
+    /**
+     * 测试创建日期转换
+     *
+     * @dataProvider createAtToTimestamp
+     */
+    public function testCreateAtToTimestamp($timestamp, $date)
+    {
+        $this->assertEquals($timestamp == strtotime($date), true);
     }
 }
